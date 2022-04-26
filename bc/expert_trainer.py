@@ -12,22 +12,34 @@ import os
 # Increase max_episodes for car-racing
 # DECREASE LINGER IF YOU CANNOT CONTROL THE CAR PROPERLY!!!
 
-# ENV = "MountainCar-v0"
-ENV = "CarRacing-v0"
-BINDINGS = {
-    # w
-    119: np.array((0, 1, 0)),
-    # a
-    97: np.array((-1, 0, 0)),
-    # s
-    115: np.array((0, 0, 1)),
-    # d
-    100: np.array((1, 0, 0))
-}
+ENV = "MountainCar-v0"
 SHARD_SIZE = 2000
-# SLEEP_TIME = 1/100
-MAX_EPISODES = 12000
-LINGER = 10
+SLEEP_TIME = 1/60
+MAX_EPISODES = 1200
+BINDINGS = {
+    # a
+    97: 0,
+    # d
+    100: 2
+}
+
+
+
+# ENV = "CarRacing-v0"
+# BINDINGS = {
+#     # w
+#     119: np.array((0, 1, 0)),
+#     # a
+#     97: np.array((-1, 0, 0)),
+#     # s
+#     115: np.array((0, 0, 1)),
+#     # d
+#     100: np.array((1, 0, 0))
+# }
+# SHARD_SIZE = 2000
+# # SLEEP_TIME = 1/60
+# MAX_EPISODES = 12000
+# LINGER = 10
 
 
 def run_recorder():
@@ -39,8 +51,8 @@ def run_recorder():
     env._max_episode_steps = MAX_EPISODES
 
     exit = False
-    cnt = 0
-    prev_action = None
+    # cnt = 0
+    # prev_action = None
 
     shard_suffix = ''.join(random.choice('0123456789ABCDEF') for i in range(16))
     sarsa_pairs = []
@@ -55,29 +67,30 @@ def run_recorder():
         _last_obs = env.reset()
 
         while not done:
-            # time.sleep(SLEEP_TIME)
+            time.sleep(SLEEP_TIME)
             env.render()
 
             # default action, do nothing
-            action = np.array((0, 0, 0))
-            if prev_action is not None and not np.all(prev_action == 0):
-                cnt += 1
-                action = prev_action
-                if cnt >= LINGER:
-                    cnt = 0
-                    action = np.array((0, 0, 0))
-            else:
+            # action = np.array((0, 0, 0))
+            action = 1
+            # if prev_action is not None and not np.all(prev_action == 0):
+            #     cnt += 1
+            #     action = prev_action
+            #     if cnt >= LINGER:
+            #         cnt = 0
+            #         action = np.array((0, 0, 0))
+            # else:
 
-                # if key is pressed, get that key
-                if msvcrt.kbhit():
-                    key_pressed = ord(msvcrt.getch())
-                    print(key_pressed)
+            # if key is pressed, get that key
+            if msvcrt.kbhit():
+                key_pressed = ord(msvcrt.getch())
+                print(key_pressed)
 
-                    # pressed 1 -> exit
-                    if key_pressed == 49:
-                        exit = True
-                    elif key_pressed in BINDINGS:
-                        action = BINDINGS[key_pressed]
+                # pressed 1 -> exit
+                if key_pressed == 49:
+                    exit = True
+                elif key_pressed in BINDINGS:
+                    action = BINDINGS[key_pressed]
 
             # exit game loop
             if exit:
@@ -85,7 +98,7 @@ def run_recorder():
                 done = True
             else:
                 obs, reward, done, info = env.step(action)
-                prev_action = action
+                # prev_action = action
                 sarsa = (_last_obs, action)
                 _last_obs = obs
                 sarsa_pairs.append(sarsa)
@@ -100,7 +113,7 @@ def run_recorder():
                     (shard_iter + 1) * SHARD_SIZE, len(sarsa_pairs))]
 
 
-        np.save(f"{shard_iter}_{shard_suffix}", sarsa_pairs)
+        np.save(f"mountaincar/{shard_iter}_{shard_suffix}", sarsa_pairs)
 
 
 dir = os.getcwd()
